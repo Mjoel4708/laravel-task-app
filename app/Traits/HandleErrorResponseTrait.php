@@ -18,12 +18,6 @@ trait HandleErrorResponseTrait {
                 'error' => $exception->getMessage()
             ], 403);
         }
-
-        if ($exception instanceof \Illuminate\Validation\ValidationException) {
-            return response()->json([
-                'error' => $exception->errors()
-            ], 422);
-        }
         if ($exception instanceof \Illuminate\Database\QueryException) {
             return response()->json([
                 'error' => 'Database query exception'

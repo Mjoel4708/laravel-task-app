@@ -2,16 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\HandleErrorResponseTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserTaskController extends Controller
 {
+    use HandleErrorResponseTrait;
+    
+    public function __construct()
+    {
+        //$this->middleware('auth:api');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        try {
+            $user = Auth::user();
+            $tasks = $user->userTasks->get();
+            return response()->json(['data' => $tasks], 200);
+
+        } catch (\Throwable $th) {
+            return $this->handleErrorResponse($th);
+        }
+           
     }
 
     /**
@@ -27,7 +43,13 @@ class UserTaskController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $user = Auth::user();
+            $task = $user->userTasks->findOrFail($id);
+            return response()->json(['data' => $task], 200);
+        } catch (\Throwable $th) {
+            return $this->handleErrorResponse($th);
+        }
     }
 
     /**
@@ -35,7 +57,7 @@ class UserTaskController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        
     }
 
     /**
@@ -43,6 +65,7 @@ class UserTaskController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        
     }
+
 }
