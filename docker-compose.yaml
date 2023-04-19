@@ -1,0 +1,74 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    links:
+      - db
+    networks:
+      - webnet
+
+  web:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./html:/usr/share/nginx/html
+    networks:
+      - webnet
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      - webnet  
+
+  phpMyAdmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - db
+    links:
+      - db
+    restart: always
+    
+    ports:
+      - "8090:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    networks:
+      - webnet
+
+volumes:
+  mysql:
+    driver: local
+  html:
+    driver: local
+
+
+networks:
+  webnet:
+    driver: bridge
