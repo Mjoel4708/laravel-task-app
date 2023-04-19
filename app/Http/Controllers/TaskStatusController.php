@@ -74,6 +74,7 @@ class TaskStatusController extends Controller
             ]);
             $taskStatus = TaskStatus::findOrFail($id);
             $taskStatus->update($attributes);
+            $taskStatus->save();
             return response()->json(['data' => $taskStatus], 200);
         } catch (\Exception $e) {
             return $this->handleErrorResponse($e);
