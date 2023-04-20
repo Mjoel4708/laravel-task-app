@@ -35,4 +35,13 @@ class LoginRequest extends FormRequest
             'password.required' => 'A password is required',
         ];
     }
+
+    public function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        $errors = (new \Illuminate\Validation\ValidationException($validator))->errors();
+        throw new \Illuminate\Validation\ValidationException($validator, response()->json([
+            'errors' => $errors,
+            'message' => 'The given data was invalid.',
+        ], 422));
+    }
 }

@@ -71,17 +71,4 @@ class UserTaskRequest extends FormRequest
         ], 422));
     }
 
-    /*
-    sample json request
-    {
-        "user_id": 1,
-        "task_id": 1,
-        "due_date": "2021-04-17 18:39:31",
-        "start_date": "2021-04-17 18:39:31",
-        "end_date": "2021-04-17 18:39:31",
-        "remarks": "Here are some remarks",
-        "status_id": 1
-        
-    }
-     */
 }

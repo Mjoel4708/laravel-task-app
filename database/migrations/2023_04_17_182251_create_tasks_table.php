@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title', 100);
             $table->string('description', 100);
             $table->dateTime('due_date');
-            $table->foreignId('status_id')->references('id')->on('task_statuses');
+            $table->foreignId('status_id')->references('id')->on('task_statuses')->onDelete('cascade');
             $table->timestamps();
         });
     }
