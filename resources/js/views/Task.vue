@@ -21,6 +21,16 @@ export default {
             showModal: false,
         };
     },
+    mounted() {
+        if (
+            typeof localStorage.getItem("token") !== "undefined" &&
+            localStorage.getItem("token") !== null
+        ) {
+            //this.isAuthenticated = true;
+        } else {
+            this.$router.push(`/login`);
+        }
+    },
     methods: {
         showCreateTaskModal() {
             // Set showModal to true to show the create task modal

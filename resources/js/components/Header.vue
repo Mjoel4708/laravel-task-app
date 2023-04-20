@@ -3,33 +3,52 @@
       <nav>
         <ul>
           <li><router-link to="/">Home</router-link></li>
-          <li><router-link to="/tasks">Tasks</router-link></li>
+          <li v-if="isAuthenticated"><router-link to="/tasks">Tasks</router-link></li>
           <li v-if="isAuthenticated"><router-link to="/profile">Profile</router-link></li>
-          <li v-if="isAuthenticated" @click="logout">Logout</li>
-          <li class="auth" v-if="!isAuthenticated"><router-link to="/login">Login</router-link></li>
+          <li v-if="isAuthenticated" class="auth"><a href="#" @click="logout">Logout</a></li>
+          <li v-else class="auth"><router-link to="/login">Login</router-link></li>
+
+          
         </ul>
       </nav>
     </header>
   </template>
   
   <script>
+  import axios from 'axios';
   export default {
+    
     data() {
       return {
-        isAuthenticated: false
+        isAuthenticated: false,
+        token: null
       };
+    },
+    mounted() {
+      
     },
     methods: {
       logout() {
-        // Implement your logout logic here
-        // Clear user authentication status and perform necessary cleanup
-        // Redirect to the appropriate page upon successful logout
+        localStorage.removeItem('token');
+        this.isAuthenticated = false;
+        this.$router.go();
+        this.$router.push('/login');
       }
     },
     mounted() {
-      // You can fetch the user authentication status from your backend API here
-      // Update the isAuthenticated data property accordingly
-      // You can use a Vuex store or other state management pattern for better separation of concerns
+      // check of token is present
+      // if yes, set isAuthenticated to true
+      if(typeof localStorage.getItem('token') !== 'undefined' && localStorage.getItem('token') !== null) {
+        this.isAuthenticated = true;
+        this.token = localStorage.getItem('token');
+      }
+    },
+    watch: {
+      isAuthenticated() {
+        if(this.isAuthenticated) {
+          this.$router.push('/tasks');
+        }
+      }
     }
   }
   </script>

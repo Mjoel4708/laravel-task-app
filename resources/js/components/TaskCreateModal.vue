@@ -4,31 +4,62 @@
             <h2>Create New Task</h2>
             <form @submit.prevent="createTask">
                 <div class="form-group">
-                    <label for="name">Name:</label>
-                    <input class="" type="text" v-model="task.name" required />
+                    <label for="title">Title:</label>
+                    <input type="text" v-model="task.title" required />
                 </div>
 
-                <div class="form-group">
-                    <label for="description">Description:</label>
-                    <input
-                        type="text-area"
-                        v-model="task.description"
-                        required
-                    />
-                </div>
                 <div class="form-group">
                     <label for="dueDate">Due Date:</label>
                     <input
                         type="datetime-local"
-                        v-model="task.dueDate"
+                        v-model="task.due_date"
                         required
                     />
                 </div>
+                <div class="form-group">
+                    <label for="startDate">Start Date:</label>
+                    <input
+                        type="datetime-local"
+                        v-model="task.start_date"
+                        required
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date:</label>
+                    <input
+                        type="datetime-local"
+                        v-model="task.end_date"
+                        required
+                    />
+                </div>
+                <div class="row form-group"></div>
+                <div class="form-group">
+                    <label for="remarks">Remarks:</label>
+                    <textarea
+                        type="text"
+                        rows="4"
+                        id="remarks"
+                        v-model="task.remarks"
+                        required
+                    ></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status:</label>
+                    <select id="status" v-model="task.status_id" required>
+                        <option v-for="status in statuses" :value="status.id">
+                            {{ status.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="error-message" v-if="error">
+                    <p>{{ error }}</p>
+                </div>
                 <div class="modal-buttons">
-                    <button class="submit-button" type="submit">Create</button>
+                    
                     <button class="cancel-button" @click="cancelCreate">
                         Cancel
                     </button>
+                    <button class="submit-button" type="submit">Create</button>
                 </div>
             </form>
         </div>
@@ -36,6 +67,7 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
     props: {
         showModal: {
@@ -46,20 +78,119 @@ export default {
     data() {
         return {
             task: {
-                name: "",
-                description: "",
-                dueDate: "",
+                title: "",
+                due_date: "",
+                start_date: "",
+                end_date: "",
+                remarks: "",
+                status_id: "",
             },
+            statuses: [],
+            error: "",
         };
     },
+    mounted() {
+        this.getStatus();
+    },
     methods: {
-        createTask() {
-            // Validate the form data and create a new task
-            if (this.task.name && this.task.description && this.task.dueDate) {
-                // Call an API or dispatch an action to create a new task with the form data
-                // Once the task is created successfully, emit an event to close the modal
-                this.$emit("closeModal");
-            }
+        createTask(event) {
+            event.preventDefault();
+            let token = localStorage.getItem("token");
+            console.log("token: ", token);
+            let createTaskData = {
+                title: this.task.title,
+                due_date: this.task.due_date,
+                description: this.task.remarks,
+                status_id: this.task.status_id,
+            };
+            let createTaskRequest = axios
+                .post(
+                    "/api/tasks/v1",
+                    createTaskData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                )
+                .then((response) => {
+                    console.log(response);
+                    //call createUserTask with response.data.id
+                    this.createUserTask(response.data.data.id).then(() => {
+                        this.$emit("closeModal");
+                    });
+                })
+                .catch((error) => {
+                    console.log("Error 1", error);
+                    if (error.response.status === 401) {
+                        this.error = "You are not authorized to create a task";
+                        
+                    } else {
+                        this.error = "Something went wrong";
+                    }
+                });
+            console.log(createTaskRequest);
+        },
+        createUserTask($taskId) {
+            let token = localStorage.getItem("token");
+            let createUserTaskData = {
+                task_id: $taskId,
+                remarks: this.task.remarks,
+                due_date: this.task.due_date,
+                start_date: this.task.start_date,
+                end_date: this.task.end_date,
+                status_id: this.task.status_id,
+            };
+            console.log("createUserTaskData", createUserTaskData);
+            let createTaskRequest = axios
+                .post(
+                    "/api/user-tasks/v1",
+                    createUserTaskData,
+                    {
+                        headers: {
+                            Authorization: `Bearer  ${token}`,
+                        },
+                    }
+                )
+                .then((response) => {
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log("Error 2", error);
+                });
+            return createTaskRequest;
+        },
+        getStatus() {
+            //use axios to fetch the tasks from the API and update the tasks array
+            let token = localStorage.getItem("token");
+            let request = axios
+                .get("/api/status/v1", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                .then((response) => {
+                    let statusObj = response.data.data;
+                    for (let key in statusObj) {
+                        this.statuses.push(statusObj[key]);
+                    }
+                    console.log(typeof this.statuses);
+                })
+                .catch((error) => {
+                    if (error.response.status === 401) {
+                        this.error = "You are not authorized to view this page";
+                        localStorage.removeItem("token");
+                        this.isAuthenticated = false;
+                        this.$router.push("/login");
+                    } else {
+                        this.error = "Something went wrong";
+                    }
+                })
+                .finally(() => {
+                    console.log("finally");
+                });
+
+            console.log(request);
         },
         cancelCreate() {
             // Emit an event to close the modal without creating a new task
@@ -80,33 +211,51 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 1000;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {
     background-color: #fff;
-    padding: 2rem;
-    max-width: 400px;
+    padding: 1rem;
+    padding-top: 0.4rem;
+    max-width: 500px;
     width: 100%;
+    height: 90vh;
+    overflow-y: auto;
 }
 
 h2 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-family: "Roboto", sans-serif;
 }
 
 form {
     display: grid;
-    gap: 1rem;
+    gap: 0.4rem;
 }
 
-label{
+label {
     display: block;
-    
 }
-input {
+input,
+textarea,
+select {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+.error-message {
+    color: #e71d36;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+}
+.error-message::before {
+    content: "⚠ ";
 }
 
 .modal-buttons {
@@ -123,7 +272,7 @@ button {
 }
 .submit-button {
     color: #fff;
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 1rem;
     background-color: #2ec4b6;
     border: 1px solid #2ec4b6;
     border-radius: 6px;
