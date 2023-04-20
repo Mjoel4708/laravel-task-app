@@ -23,24 +23,21 @@ class UserTaskRequest extends FormRequest
     {
         if ($this->method() === 'POST') {
             return [
-                'title' => 'required|string|between:2,100',
-                'description' => 'required|string|between:2,100',
+                'task_id' => 'required|exists:tasks,id',
                 'due_date' => 'required|date',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date',
-                'remarks' => 'required|string|between:2,100',
-                'status_id' => 'required|exists:taskStatus,id',
+                'remarks' => 'string|between:2,100',
+                'status_id' => 'required|exists:task_statuses,id',
             ];
         }else{
             return [
-                'title' => 'string|between:2,100',
-                'description' => 'string|between:2,100',
+                'task_id' => 'exists:tasks,id',
                 'due_date' => 'date',
                 'start_date' => 'date',
                 'end_date' => 'date',
                 'remarks' => 'string|between:2,100',
-                'status_id' => 'exists:taskStatus,id',
-                
+                'status_id' => 'exists:task_statuses,id',
             ];
         }
         
@@ -50,23 +47,18 @@ class UserTaskRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'A title is required',
-            'title.string' => 'Title must be a string',
-            'title.between' => 'Title must be between 2 and 100 characters',
-            'description.required' => 'A description is required',
-            'description.string' => 'Description must be a string',
-            'description.between' => 'Description must be between 2 and 100 characters',
-            'due_date.required' => 'A due date is required',
-            'due_date.date' => 'Due date must be a valid date',
-            'start_date.required' => 'A start date is required',
-            'start_date.date' => 'Start date must be a valid date',
-            'end_date.required' => 'An end date is required',
-            'end_date.date' => 'End date must be a valid date',
-            'remarks.required' => 'A remarks is required',
-            'remarks.string' => 'Remarks must be a string',
-            'remarks.between' => 'Remarks must be between 2 and 100 characters',
-            'status_id.required' => 'A status is required',
-            'status_id.exists' => 'Status must be a valid status',
+            'task_id.required' => 'The task field is required.',
+            'task_id.exists' => 'The task must be a valid task.',
+            'due_date.required' => 'The due date field is required.',
+            'due_date.date' => 'The due date must be a date.',
+            'start_date.required' => 'The start date field is required.',
+            'start_date.date' => 'The start date must be a date.',
+            'end_date.required' => 'The end date field is required.',
+            'end_date.date' => 'The end date must be a date.',
+            'remarks.string' => 'The remarks must be a string.',
+            'remarks.between' => 'The remarks must be between 2 and 100 characters.',
+            'status_id.required' => 'The status field is required.',
+            'status_id.exists' => 'The status must be a valid status.',
         ];
     }
     
@@ -78,4 +70,18 @@ class UserTaskRequest extends FormRequest
             'message' => 'The given data was invalid.',
         ], 422));
     }
+
+    /*
+    sample json request
+    {
+        "user_id": 1,
+        "task_id": 1,
+        "due_date": "2021-04-17 18:39:31",
+        "start_date": "2021-04-17 18:39:31",
+        "end_date": "2021-04-17 18:39:31",
+        "remarks": "Here are some remarks",
+        "status_id": 1
+        
+    }
+     */
 }

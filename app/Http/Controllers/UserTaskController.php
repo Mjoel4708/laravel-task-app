@@ -50,11 +50,13 @@ class UserTaskController extends Controller
     public function show(string $id)
     {
         try {
-            $user = User::with('userTasks')->findOrFail(Auth::id()); 
-            $task = $user->user_tasks->where('id', $id)->first();
+            $userId = User::findOrFail(Auth::id())->id;
+            $task = UserTask::where('id', $id)->where('user_id', $userId)->first();
             return response()->json(['data' => $task], 200);
+        } catch (\Exception $e) {
+            return $this->handleErrorResponse($e);
         } catch (\Throwable $th) {
-            return $this->handleErrorResponse($th);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
@@ -65,12 +67,15 @@ class UserTaskController extends Controller
     {
         try {
             $attributes = $request->validated();
-            $user = User::with('userTasks')->findOrFail(Auth::id()); 
-            $task = $user->user_tasks->where('id', $id)->first();
+            $userId = User::findOrFail(Auth::id())->id;
+            $task = UserTask::where('id', $id)->where('user_id', $userId)->first();
             $task->update($attributes);
+            $task->save();
             return response()->json(['data' => $task], 200);
+        } catch (\Exception $e) {
+            return $this->handleErrorResponse($e);
         } catch (\Throwable $th) {
-            return $this->handleErrorResponse($th);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
@@ -80,8 +85,8 @@ class UserTaskController extends Controller
     public function destroy(string $id)
     {
         try {
-            $user = User::with('userTasks')->findOrFail(Auth::id()); 
-            $task = $user->user_tasks->where('id', $id)->first();
+            $userId = User::findOrFail(Auth::id())->id;
+            $task = UserTask::where('id', $id)->where('user_id', $userId)->first();
             $task->delete();
             return response()->json(['data' => $task], 200);
         } catch (\Throwable $th) {
