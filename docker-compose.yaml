@@ -12,7 +12,18 @@ services:
       - db
     networks:
       - webnet
-
+    working_dir: /var/www/html/
+    restart: always
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - webnet
   db:
     image: mysql:5.7
     restart: always

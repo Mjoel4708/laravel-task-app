@@ -1,31 +1,59 @@
 # Vue laravel dockerfile
-FROM php:8.2.3-cli
+FROM composer:2.0 as build
+COPY . /app/
+RUN composer install --prefer-dist --no-dev --optimize-autoloader --no-interaction
 
-RUN apt-get update -y && apt-get install -y libmcrypt-dev
-# install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
-RUN apt-get install -y nodejs
-# install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN docker-php-ext-install pdo
-# install git
-RUN apt-get install -y git
+FROM node:14.15.4-alpine3.12 as node
+COPY --from=build /app /app
+RUN npm install && npm run dev
 
-# Install extensions for php
-RUN docker-php-ext-install pdo_mysql
-RUN docker-php-ext-install gd
+FROM php:8.2.3-fpm
 
+# Arguments defined in docker-compose.yml
+ARG user
+ARG uid
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install Node.js
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -- \
+    && apt-get install -y nodejs
+
+
+# Create system user to run Composer and Artisan Commands
+RUN useradd mike
+RUN mkdir /home/mike
+RUN chown mike:mike /home/mike
+RUN usermod -aG sudo mike
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Set working directory
 WORKDIR /app
+# Copy existing application directory contents
 COPY . /app
 
-RUN composer install
-RUN npm install
-
-# vue laravel
-RUN npm run dev
 
 
+USER $user
 
+#
 
 
 EXPOSE 8000
