@@ -26,7 +26,9 @@
                 </div>
                 <div class="register-link">
                     <p>
-                        <router-link to="/register">Don't have an account? Register</router-link>
+                        <router-link to="/register"
+                            >Don't have an account? Register</router-link
+                        >
                     </p>
                 </div>
                 <button type="submit">Login</button>
@@ -46,9 +48,9 @@ export default {
         };
     },
     mounted() {
-        if(typeof localStorage.getItem('token') == 'string'){
+        if (typeof localStorage.getItem("token") == "string") {
             this.$router.push("/");
-        }     
+        }
     },
     methods: {
         login() {
@@ -70,20 +72,17 @@ export default {
                 })
                 .then((response) => {
                     // Login successful
-                    console.log(response);
+
                     // Store the token in localStorage
                     localStorage.setItem("token", response.data.access_token);
-                    if(typeof localStorage.getItem('token')){
+                    if (typeof localStorage.getItem("token")) {
                         this.isAuthenticated = true;
                         //reload the page
                         this.$router.go();
                         this.$router.push("/");
-                    } 
-                    
-  
+                    }
                 })
                 .catch((error) => {
-                  console.log(error);
                     if (error.response.status === 422) {
                         let errorsObj = error.response.data.errors;
                         for (let key in errorsObj) {
@@ -99,7 +98,8 @@ export default {
                         );
                         return;
                     }
-                }). finally(() => {
+                })
+                .finally(() => {
                     this.email = "";
                     this.password = "";
                 });

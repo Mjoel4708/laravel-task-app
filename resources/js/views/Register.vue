@@ -76,7 +76,6 @@ export default {
                 axios
                     .post("/api/auth/v1/register", userData)
                     .then((response) => {
-                        console.log(response);
                         // redirect to the login page
                         localStorage.setItem("token", response.data.token);
                         // After successful registration, you can navigate to the login page or perform other actions as needed
@@ -84,7 +83,6 @@ export default {
                         return;
                     })
                     .catch((error) => {
-                        console.log(error);
                         if (error.response.status === 422) {
                             let errorsObj = error.response.data.errors;
                             for (let key in errorsObj) {
@@ -94,7 +92,6 @@ export default {
                                     );
                                 }
                             }
-                            console.log(this.errors);
                         } else {
                             this.errors = this.errors.concat(
                                 error.response.data.error

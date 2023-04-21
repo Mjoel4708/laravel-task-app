@@ -4,10 +4,15 @@
             <h3>{{ task.title }}</h3>
             <p>{{ task.description }}</p>
         </div>
-        <div class="create-remarks-button">
-          <button @click="showCreateUserTaskModal">Create New Task</button>
+        <div class="action-button">
+            <button class="update-btn btn" @click="showUpdateTaskModal">
+                Update Task
+            </button>
+            <button class="create-btn btn" @click="showCreateUserTaskModal">
+                Create New Task
+            </button>
         </div>
-        
+
         <div v-if="isLoading" class="loading">
             <p>Loading...</p>
         </div>
@@ -19,6 +24,13 @@
                 :pageName="pageName"
                 @closeModal="closeModal"
             />
+            <TaskCreateModal
+                :taskId="id"
+                :showModal="showTaskModal"
+                :taskSelect="task"
+                :pageName="pageName"
+                @closeModal="closeModal"
+            />
         </div>
     </div>
 </template>
@@ -26,6 +38,7 @@
 <script>
 import UserTask from "../components/UserTask.vue";
 import CreateUserTaskModal from "../components/CreateUserTaskModal.vue";
+import TaskCreateModal from "../components/TaskCreateModal.vue";
 export default {
     name: "UserTasks",
     data() {
@@ -36,10 +49,10 @@ export default {
                 description: "",
                 status_id: "",
                 due_date: "",
-                
             },
             showModal: false,
-            pageName: "Create User Task",
+            showTaskModal: false,
+            pageName: "",
         };
     },
     mounted() {
@@ -54,13 +67,21 @@ export default {
     methods: {
         showCreateUserTaskModal() {
             // Set showModal to true to show the create task modal
+            this.pageName = "Create New User Task";
             this.showModal = true;
-        
+        },
+        showUpdateTaskModal() {
+            this.pageName = "Updating Task";
+            this.showTaskModal = true;
         },
         closeModal() {
             // Set showModal to false to hide the create task modal
-            this.showModal = false;
-           
+            this.showTaskModal = false;
+        },
+        closeTaskModal() {
+            // Set showModal to false to hide the create task modal
+            this.showTaskModal = false;
+            this.getTask();
         },
         changeStatus(newStatusId) {
             // Emit event to parent component with new status ID
@@ -86,32 +107,31 @@ export default {
                     };
                 })
                 .catch((error) => {
-                    console.log(error);
                     if (error.response.status === 401) {
                         this.error = "You are not authorized to view this page";
                         localStorage.removeItem("token");
                         this.isAuthenticated = false;
                         this.$router.push("/login");
                     } else {
-                        console.log(error);
                         this.error = "Something went wrong";
                     }
                 })
                 .finally(() => {
-                    console.log("finally");
+                    //console.log("finally");
                 });
 
             //if response code is not 200 return error
             if (fetchRequest.status !== 200) {
-                console.log("error");
+                //console.log("error");
             }
             this.isLoading = false;
         },
     },
-    components: { 
-      UserTask,
-      CreateUserTaskModal
-     },
+    components: {
+        UserTask,
+        CreateUserTaskModal,
+        TaskCreateModal,
+    },
 };
 </script>
 
@@ -150,12 +170,14 @@ export default {
     text-align: center;
     font-family: sans-serif;
 }
-.create-remarks-button {
+.action-button {
     display: flex;
     justify-content: flex-end;
+    margin-top: 1rem; /* space between buttons and task card */
+    justify-content: space-between; /* space between buttons */
     margin: 1rem;
 }
-button {
+.create-btn {
     margin-left: auto;
     padding: 0.5rem;
     border: none;
@@ -163,6 +185,19 @@ button {
     background-color: #000;
     color: #fff;
     cursor: pointer;
-    
+}
+.update-btn {
+    /*green update button */
+    background-color: #2fb95d;
+    color: #fff;
+    border-radius: 4px;
+    border: none;
+    padding: 0.5rem 1rem;
+}
+.update-btn:hover {
+    /*green update button */
+    background-color: #fff;
+    color: #2fb95d;
+    border: 1px solid #2fb95d;
 }
 </style>

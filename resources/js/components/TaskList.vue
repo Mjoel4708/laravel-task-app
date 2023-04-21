@@ -16,10 +16,10 @@
                     </p>
                     <div class="task-actions">
                         <button
-                            class="action-btn view-btn"
-                            @click="viewUserTask(task)"
+                            class="action-btn update-btn"
+                            @click="updateTask(task)"
                         >
-                            View
+                            Update
                         </button>
                         <button
                             class="action-btn delete-btn"
@@ -34,17 +34,12 @@
         <li v-else>No tasks found</li>
         <li class="errors" v-if="error">{{ error }}</li>
     </div>
-    <CreateUserTaskModal
-                :taskId="id"
-                :showModal="showModal"
-                :task="task"
-                @closeModal="closeModal"
-            />
 </template>
 
 <script>
 import axios from "axios";
 import moment from "moment";
+
 export default {
     data() {
         return {
@@ -52,6 +47,7 @@ export default {
             error: null,
             id: "",
             showModal: false,
+            task: "",
         };
     },
     mounted() {
@@ -64,7 +60,7 @@ export default {
         }
 
         this.fetchTasks();
-        console.log(typeof this.tasks);
+        //console.log(typeof this.tasks);
     },
 
     methods: {
@@ -73,7 +69,7 @@ export default {
             this.$router.push(`/task/${taskId}`);
         },
         viewUserTask(task) {
-            console.log(task);
+            //console.log(task);
             // Navigate to user-task page with the specified userTaskId as route param
             this.$router.push({
                 name: "UserTasks",
@@ -113,17 +109,15 @@ export default {
                     }
                 })
                 .finally(() => {
-                    console.log("finally");
+                    //console.log("finally");
                 });
 
             //if response code is not 200 return error
             if (fetchRequest.status !== 200) {
-                console.log("error");
+                //console.log("error");
             }
         },
-        closeModal() {
-            this.showModal = false;
-        },
+
         deleteTask(taskId) {
             // Delete a task by taskId
             let token = localStorage.getItem("token");
@@ -137,7 +131,6 @@ export default {
                     this.fetchTasks();
                     //reload the page
                     this.$router.go();
-                    console.log(response);
                 })
                 .catch((error) => {
                     if (error.response.status === 401) {
@@ -150,7 +143,7 @@ export default {
                     }
                 })
                 .finally(() => {
-                    console.log("finally");
+                    //console.log("finally");
                 });
         },
     },
@@ -163,7 +156,6 @@ export default {
     margin: 1rem auto;
     padding: 2rem;
 }
-
 
 h2 {
     margin-top: 0;
@@ -221,15 +213,14 @@ li.errors {
     background-color: #fff;
     border: 1px solid #e71d36;
 }
-.task-actions{
+.task-actions {
     /* delete and update buttons */
     display: flex;
     margin-top: 1rem; /* space between buttons and task card */
     justify-content: space-between; /* space between buttons */
     width: 100%;
-
 }
-.action-btn{
+.action-btn {
     /* update button */
     background-color: #2ec4b6;
     color: #fff;
@@ -241,7 +232,7 @@ li.errors {
     font-weight: 600;
     transition: all 0.3s ease-in-out;
 }
-.delete-btn{
+.delete-btn {
     /* delete button */
     background-color: #e71d36;
     color: #fff;
@@ -254,14 +245,11 @@ li.errors {
     margin-right: 1rem;
     transition: all 0.3s ease-in-out;
 }
-.delete-btn:hover{
+.delete-btn:hover {
     background-color: #fff;
     color: #e71d36;
     border: 1px solid #e71d36;
 }
-
-
-
 
 @media (min-width: 768px) {
     .task-list-container {

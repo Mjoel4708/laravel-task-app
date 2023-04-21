@@ -1,7 +1,9 @@
 <template>
     <div class="task-create-modal" v-show="showModal">
-        <div class="modal-content">
-            <h2>Create New Task</h2>
+        <div v-if="isLoading" class="modal-content">...Loading</div>
+        <div v-if="!isLoading" class="modal-content">
+            <h2>{{ pageName }}</h2>
+            <p v-if="taskSelect">Task ID: {{ taskSelect.id }}</p>
             <form @submit.prevent="createTask">
                 <div class="form-group">
                     <label for="title">Title:</label>
@@ -61,15 +63,32 @@ export default {
             type: Boolean,
             required: true,
         },
-        id: {
-            type: Number,
+
+        taskSelect: {
+            type: Object,
             required: false,
+            id: {
+                type: Number,
+                required: false,
+            },
+            title: {
+                type: String,
+                required: false,
+            },
+            description: {
+                type: String,
+                required: false,
+            },
+            due_date: {
+                type: String,
+                required: false,
+            },
+            status_id: {
+                type: Number,
+                required: false,
+            },
         },
-        title: {
-            type: String,
-            required: false,
-        },
-        headMessage: {
+        pageName: {
             type: String,
             required: false,
         },
@@ -77,6 +96,7 @@ export default {
     data() {
         return {
             task: {
+                id: "",
                 title: "",
                 due_date: "",
                 description: "",
@@ -89,12 +109,22 @@ export default {
     },
     mounted() {
         this.getStatus();
+        //console.log(this.title);
+        if (this.taskSelect) {
+            this.isLoading = true;
+            setTimeout(() => {
+                this.task = this.taskSelect;
+                this.isLoading = false;
+            }, 1000);
+        }
     },
     methods: {
         createTask(event) {
+            if (this.taskSelect) {
+                return this.updateTask(event);
+            }
             event.preventDefault();
             let token = localStorage.getItem("token");
-            console.log("token: ", token);
             let createTaskData = {
                 title: this.task.title,
                 due_date: this.task.due_date,
@@ -108,11 +138,10 @@ export default {
                     },
                 })
                 .then((response) => {
-                    console.log(response);
                     this.$emit("closeModal");
                 })
                 .catch((error) => {
-                    console.log("Error 1", error);
+                    //console.log("Error 1", error);
                     if (error.response.status === 401) {
                         this.error = "You are not authorized to create a task";
                         return;
@@ -126,13 +155,58 @@ export default {
                                 );
                             }
                         }
-                        console.log(this.errors);
+
                         return;
                     } else {
                         this.error = "Something went wrong";
                     }
                 });
-            console.log(createTaskRequest);
+            //console.log(createTaskRequest);
+        },
+        updateTask(event) {
+            event.preventDefault();
+            let token = localStorage.getItem("token");
+            let updateTaskData = {
+                title: this.task.title,
+                due_date: this.task.due_date,
+                description: this.task.description,
+                status_id: this.task.status_id,
+            };
+            let updateTaskRequest = axios
+                .put(`/api/tasks/v1/${this.task.id}`, updateTaskData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                .then((response) => {
+                    this.$emit("closeModal");
+                    //go to the task page
+                    this.$router.push("/tasks");
+                    //reload the page
+                    this.$router.go();
+                })
+                .catch((error) => {
+                    //console.log("Error 1", error);
+                    if (error.response.status === 401) {
+                        this.error = "You are not authorized to create a task";
+                        return;
+                    }
+                    if (error.response.status === 422) {
+                        let errorsObj = error.response.data.errors;
+                        for (let key in errorsObj) {
+                            if (errorsObj.hasOwnProperty(key)) {
+                                this.errors = this.errors.concat(
+                                    errorsObj[key]
+                                );
+                            }
+                        }
+
+                        return;
+                    } else {
+                        this.error = "Something went wrong";
+                    }
+                });
+            //console.log(updateTaskRequest);
         },
         getStatus() {
             //use axios to fetch the tasks from the API and update the tasks array
@@ -148,7 +222,7 @@ export default {
                     for (let key in statusObj) {
                         this.statuses.push(statusObj[key]);
                     }
-                    console.log(typeof this.statuses);
+                    //console.log(typeof this.statuses);
                 })
                 .catch((error) => {
                     if (error.response.status === 401) {
@@ -161,10 +235,10 @@ export default {
                     }
                 })
                 .finally(() => {
-                    console.log("finally");
+                    //console.log("finally");
                 });
 
-            console.log(request);
+            //console.log(request);
         },
         cancelCreate() {
             // Emit an event to close the modal without creating a new task

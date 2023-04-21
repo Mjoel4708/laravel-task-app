@@ -1,27 +1,30 @@
 <template>
     <div class="task">
-        
-        
         <div class="user-task-body">
             <div class="user-task-remarks">
                 <h4>Remarks</h4>
                 <ul>
-            
                     <li
                         v-if="userTasks.length > 0"
                         v-for="userTask in userTasks"
                         :key="userTask.id"
                     >
                         <div class="user-task-card">
-                            <span class="user-id">User ID: {{ userTask.user_id }}</span>
-                            <p>{{ userTask.remarks }} </p>
+                            <span class="user-id"
+                                >User ID: {{ userTask.user_id }}</span
+                            >
+                            <p>{{ userTask.remarks }}</p>
                             <span class="status">
-                                <p>Status: {{ 
-                                    
-                                    statusOptions.find(
-                                        (status) => status.id === userTask.status_id
-                                    ).name
-                                }}</p> </span>
+                                <p>
+                                    Status:
+                                    {{
+                                        statusOptions.find(
+                                            (status) =>
+                                                status.id === userTask.status_id
+                                        ).name
+                                    }}
+                                </p>
+                            </span>
                             <p>
                                 Created at:
                                 {{
@@ -82,21 +85,18 @@ export default {
                     },
                 })
                 .then((response) => {
-                    if(typeof response.data.data !== "array") {
+                    if (typeof response.data.data !== "array") {
                         this.userTasks = response.data.data;
-                    } else if(typeof response.data.data === "object") {
+                    } else if (typeof response.data.data === "object") {
                         for (let key in response.data.data) {
                             this.userTasks.push(response.data.data[key]);
                         }
                     } else {
                         this.userTasks = [];
                     }
-                    console.log(this.userTasks);
-
+                    //console.log(this.userTasks);
                 })
-                .catch((error) => {
-                    console.log(error);
-                });
+                .catch((error) => {});
         },
         setTask() {
             this.task.id = this.id;
@@ -111,9 +111,7 @@ export default {
                     this.remarks.push(response.data);
                     this.newRemark = "";
                 })
-                .catch((error) => {
-                    console.log(error);
-                });
+                .catch((error) => {});
         },
         getStatus() {
             //use axios to fetch the tasks from the API and update the tasks array
@@ -141,40 +139,18 @@ export default {
                     }
                 })
                 .finally(() => {
-                    console.log("finally");
+                    this.loading = false;
                 });
 
-            console.log(request);
+            return request;
         },
-        updateStatus() {
-            let updateRequest = axios
-                .put(
-                    "api/user-tasks/v1",
-                    {
-                        status_id: this.newStatus,
-                        task_id: this.task.id,
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
-                        },
-                    }
-                )
-                .then((response) => {
-                    console.log(response);
-                })
-                .catch((error) => {
-                    console.log(error);
-                });
-        },
+
         //turn object task [object object] to object
         taskToArray() {
             let taskObj = this.task;
             for (let key in taskObj) {
                 this.userTasks.push(taskObj[key]);
-                console.log(taskObj[key]);
+                //console.log(taskObj[key]);
             }
         },
     },
@@ -192,10 +168,10 @@ export default {
     padding-top: 0.4rem;
     max-width: 800px;
     width: 100%;
-    height: 120vh;
+    height: 90vh;
     overflow-y: auto;
     margin: 1rem auto;
-  }
+}
 .user-task-header {
     display: flex;
     flex-direction: column;
@@ -206,11 +182,10 @@ export default {
     margin: 0;
     margin-bottom: 0.5rem;
 }
-.user-task-remarks{
+.user-task-remarks {
     padding: 1rem;
-    
 }
-.user-task-remarks li{
+.user-task-remarks li {
     margin-bottom: 1rem;
     margin: 1.5rem;
     border: 1px solid #ddd;
@@ -219,7 +194,6 @@ export default {
 .user-task-remarks h4 {
     margin: 0;
     margin-bottom: 0.5rem;
-    
 }
 .user-task-card {
     display: flex;
@@ -249,7 +223,6 @@ li {
     padding: 0.5rem;
     background-color: #f5f5f5;
     border-radius: 4px;
-
 }
 form {
     display: grid;
@@ -277,5 +250,4 @@ button {
     color: #fff;
     cursor: pointer;
 }
-
 </style>

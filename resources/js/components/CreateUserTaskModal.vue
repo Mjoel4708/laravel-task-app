@@ -114,7 +114,6 @@ export default {
                     },
                 })
                 .then((response) => {
-                    console.log(response);
                     this.$emit("close-modal");
                 })
                 .catch((error) => {
@@ -127,7 +126,6 @@ export default {
                                 );
                             }
                         }
-                        console.log(this.errors);
                     } else {
                         this.errors = this.errors.concat(
                             error.response.data.error
@@ -150,7 +148,7 @@ export default {
                     for (let key in statusObj) {
                         this.statuses.push(statusObj[key]);
                     }
-                    console.log(typeof this.statuses);
+                    //console.log(typeof this.statuses);
                 })
                 .catch((error) => {
                     if (error.response.status === 401) {
@@ -168,19 +166,18 @@ export default {
                                 );
                             }
                         }
-                        console.log(this.errors);
                     } else {
                         this.error = "Something went wrong";
                     }
                 })
                 .finally(() => {
-                    console.log("finally");
+                    //console.log("finally");
                 });
         },
         cancelCreate() {
             // Emit an event to close the modal without creating a new task
             this.$emit("closeModal");
-            console.log(this.showModal);
+            //console.log(this.showModal);
         },
     },
 };

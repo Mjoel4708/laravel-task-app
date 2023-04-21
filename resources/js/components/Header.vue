@@ -4,7 +4,7 @@
         <ul>
           <li><router-link to="/">Home</router-link></li>
           <li v-if="isAuthenticated"><router-link to="/tasks">Tasks</router-link></li>
-          <li v-if="isAuthenticated"><router-link to="/profile">Profile</router-link></li>
+          
           <li v-if="isAuthenticated" class="auth"><a href="#" @click="logout">Logout</a></li>
           <li v-else class="auth"><router-link to="/login">Login</router-link></li>
 

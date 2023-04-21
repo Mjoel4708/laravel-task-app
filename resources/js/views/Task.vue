@@ -5,7 +5,10 @@
         <TaskList />
         <TaskCreateModal 
             :showModal="showModal"  
-            @closeModal="closeModal" 
+            :pageName="pageName"
+            @closeModal="closeModal"
+
+
         />
     </div>
 </template>
@@ -22,6 +25,7 @@ export default {
     data() {
         return {
             showModal: false,
+            pageName: "Create Task",
         };
     },
     mounted() {
