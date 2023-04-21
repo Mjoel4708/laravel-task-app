@@ -21,7 +21,8 @@
     data() {
       return {
         isAuthenticated: false,
-        token: null
+        token: null,
+        isLoaded: false
       };
     },
     mounted() {

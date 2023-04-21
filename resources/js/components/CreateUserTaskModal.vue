@@ -1,11 +1,17 @@
 <template>
     <div class="task-create-modal" v-show="showModal">
         <div class="modal-content">
-            <h2>Create New Task</h2>
-            <form @submit.prevent="createTask">
+            <h2>{{ pageName }}</h2>
+            <form @submit.prevent="createUserTask">
                 <div class="form-group">
-                    <label for="title">Title:</label>
-                    <input type="text" v-model="task.title" required />
+                    <label for="remarks">Remarks:</label>
+                    <textarea
+                        type="text"
+                        rows="4"
+                        id="remarks"
+                        v-model="task.remarks"
+                        required
+                    ></textarea>
                 </div>
 
                 <div class="form-group">
@@ -16,18 +22,24 @@
                         required
                     />
                 </div>
-
-                <div class="row form-group"></div>
                 <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea
-                        type="text"
-                        rows="4"
-                        id="description"
-                        v-model="task.description"
+                    <label for="startDate">Start Date:</label>
+                    <input
+                        type="datetime-local"
+                        v-model="task.start_date"
                         required
-                    ></textarea>
+                    />
                 </div>
+                <div class="form-group">
+                    <label for="endDate">End Date:</label>
+                    <input
+                        type="datetime-local"
+                        v-model="task.end_date"
+                        required
+                    />
+                </div>
+                <div class="row form-group"></div>
+
                 <div class="form-group">
                     <label for="status">Status:</label>
                     <select id="status" v-model="task.status_id" required>
@@ -36,11 +48,8 @@
                         </option>
                     </select>
                 </div>
-                <div class="error-message" v-if="error || errors">
+                <div class="error-message" v-if="error">
                     <p>{{ error }}</p>
-                    <ul>
-                        <li v-for="error in errors">{{ error }}</li>
-                    </ul>
                 </div>
                 <div class="modal-buttons">
                     <button class="cancel-button" @click="cancelCreate">
@@ -61,62 +70,54 @@ export default {
             type: Boolean,
             required: true,
         },
-        id: {
-            type: Number,
-            required: false,
-        },
-        title: {
+        taskId: {
             type: String,
-            required: false,
+            required: true,
         },
-        headMessage: {
+        pageName: {
             type: String,
-            required: false,
+            required: true,
         },
     },
     data() {
         return {
+            taskId: parseInt(this.taskId),
             task: {
-                title: "",
                 due_date: "",
-                description: "",
+                start_date: "",
+                end_date: "",
+                remarks: "",
                 status_id: "",
             },
             statuses: [],
-            error: null,
-            errors: [],
+            error: "",
         };
     },
     mounted() {
         this.getStatus();
     },
     methods: {
-        createTask(event) {
-            event.preventDefault();
+        createUserTask() {
             let token = localStorage.getItem("token");
-            console.log("token: ", token);
-            let createTaskData = {
-                title: this.task.title,
+            let createUserTaskData = {
+                task_id: this.taskId,
+                remarks: this.task.remarks,
                 due_date: this.task.due_date,
-                description: this.task.description,
+                start_date: this.task.start_date,
+                end_date: this.task.end_date,
                 status_id: this.task.status_id,
             };
             let createTaskRequest = axios
-                .post("/api/tasks/v1", createTaskData, {
+                .post("/api/user-tasks/v1", createUserTaskData, {
                     headers: {
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer  ${token}`,
                     },
                 })
                 .then((response) => {
                     console.log(response);
-                    this.$emit("closeModal");
+                    this.$emit("close-modal");
                 })
                 .catch((error) => {
-                    console.log("Error 1", error);
-                    if (error.response.status === 401) {
-                        this.error = "You are not authorized to create a task";
-                        return;
-                    }
                     if (error.response.status === 422) {
                         let errorsObj = error.response.data.errors;
                         for (let key in errorsObj) {
@@ -127,12 +128,13 @@ export default {
                             }
                         }
                         console.log(this.errors);
-                        return;
                     } else {
-                        this.error = "Something went wrong";
+                        this.errors = this.errors.concat(
+                            error.response.data.error
+                        );
                     }
                 });
-            console.log(createTaskRequest);
+            return createTaskRequest;
         },
         getStatus() {
             //use axios to fetch the tasks from the API and update the tasks array
@@ -156,6 +158,17 @@ export default {
                         localStorage.removeItem("token");
                         this.isAuthenticated = false;
                         this.$router.push("/login");
+                    }
+                    if (error.response.status === 422) {
+                        let errorsObj = error.response.data.errors;
+                        for (let key in errorsObj) {
+                            if (errorsObj.hasOwnProperty(key)) {
+                                this.errors = this.errors.concat(
+                                    errorsObj[key]
+                                );
+                            }
+                        }
+                        console.log(this.errors);
                     } else {
                         this.error = "Something went wrong";
                     }
@@ -163,12 +176,11 @@ export default {
                 .finally(() => {
                     console.log("finally");
                 });
-
-            console.log(request);
         },
         cancelCreate() {
             // Emit an event to close the modal without creating a new task
             this.$emit("closeModal");
+            console.log(this.showModal);
         },
     },
 };

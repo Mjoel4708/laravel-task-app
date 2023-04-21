@@ -3,7 +3,10 @@
         <h1>Tasks Page</h1>
         <button @click="showCreateTaskModal">Create New Task</button>
         <TaskList />
-        <TaskCreateModal :showModal="showModal" @closeModal="closeModal" />
+        <TaskCreateModal 
+            :showModal="showModal"  
+            @closeModal="closeModal" 
+        />
     </div>
 </template>
 

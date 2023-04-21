@@ -4,6 +4,7 @@ import Register from "../views/Register.vue";
 import Home from "../views/Home.vue";
 import Task from "../views/Task.vue";
 import Profile from "../views/UserProfile.vue";
+import UserTasks from "../views/UserTasks.vue";
 
 const routes = [
     {
@@ -30,6 +31,12 @@ const routes = [
       path: "/tasks",
       name: "Task",
       component: Task,
+    },
+    {
+      path: "/user-tasks/:id",
+      name: "UserTasks",
+      component: UserTasks,
+      props: true,
     }
 ];
 

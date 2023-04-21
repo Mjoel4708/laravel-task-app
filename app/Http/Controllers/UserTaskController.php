@@ -19,9 +19,9 @@ class UserTaskController extends Controller
     public function index()
     {
         try {
-            $user = User::with('userTasks')->findOrFail(Auth::id());
-            $tasks = $user->userTasks->all();
-            return response()->json(['data' => $tasks], 200);
+            //get user tasks
+            $userTasks = UserTask::all();
+            return response()->json(['data' => $userTasks], 200);
 
         } catch (\Throwable $th) {
             return $this->handleErrorResponse($th);
@@ -50,9 +50,21 @@ class UserTaskController extends Controller
     public function show(string $id)
     {
         try {
-            $userId = User::findOrFail(Auth::id())->id;
-            $task = UserTask::where('id', $id)->where('user_id', $userId)->first();
-            return response()->json(['data' => $task], 200);
+            $userTask = UserTask::where('id', $id)->first();
+            return response()->json(['data' => $userTask], 200);
+        } catch (\Exception $e) {
+            return $this->handleErrorResponse($e);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+    
+    //get user tasks by task id
+    public function fetchUserTasksByTaskId(string $id)
+    {
+        try {
+            $userTasks = UserTask::where('task_id', $id)->get();
+            return response()->json(['data' => $userTasks], 200);
         } catch (\Exception $e) {
             return $this->handleErrorResponse($e);
         } catch (\Throwable $th) {

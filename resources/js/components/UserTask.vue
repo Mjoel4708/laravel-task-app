@@ -1,38 +1,42 @@
 <template>
-    <div class="user-task">
-        <div class="user-task-header">
-            <h3>{{ task.title }}</h3>
-            <p>{{ task.description }}</p>
-        </div>
+    <div class="task">
+        
+        
         <div class="user-task-body">
             <div class="user-task-remarks">
                 <h4>Remarks</h4>
                 <ul>
-                    <li v-for="userTask in userTasks" :key="userTask.id">
+            
+                    <li
+                        v-if="userTasks.length > 0"
+                        v-for="userTask in userTasks"
+                        :key="userTask.id"
+                    >
                         <div class="user-task-card">
-                            <p>{{ userTask.remark }}</p>
-                            <p>{{ userTask.created_at }}</p>
+                            <span class="user-id">User ID: {{ userTask.user_id }}</span>
+                            <p>{{ userTask.remarks }} </p>
+                            <span class="status">
+                                <p>Status: {{ 
+                                    
+                                    statusOptions.find(
+                                        (status) => status.id === userTask.status_id
+                                    ).name
+                                }}</p> </span>
+                            <p>
+                                Created at:
+                                {{
+                                    Date(userTask.created_at)
+                                        .toString()
+                                        .slice(0, 15)
+                                }}
+                            </p>
                         </div>
                     </li>
+                    <li v-else>No remarks found</li>
                 </ul>
-                <form @submit.prevent="addRemark">
-                    <label for="new-remark">Add Remark:</label>
-                    <textarea id="new-remark" v-model="newRemark"></textarea>
-                    <button type="submit">Add</button>
-                </form>
-            </div>
-            <div class="user-task-status">
-                <h4>Status</h4>
-                <p>{{ status }}</p>
-                <select v-model="newStatus" @change="updateStatus">
-                    <option
-                        v-for="option in statusOptions"
-                        :value="option.id"
-                        :key="option.id"
-                    >
-                        {{ option.name }}
-                    </option>
-                </select>
+                <div class="error-message" v-if="error">
+                    <p>{{ error }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -43,8 +47,12 @@ import axios from "axios";
 
 export default {
     props: {
-        task: {
-            type: Object,
+        id: {
+            type: Number,
+            required: true,
+        },
+        title: {
+            type: String,
             required: true,
         },
     },
@@ -53,28 +61,50 @@ export default {
             userTasks: [],
             newRemark: "",
             statusOptions: [],
-            newStatus: this.task.status_id,
+            newStatus: "",
             status: "",
+            start_date: "",
+            showModal: false,
         };
     },
     mounted() {
-        this.getRemarks();
+        this.showUserTaskByTaskId();
+        //this.setTask();
         this.getStatus();
     },
     methods: {
-        getRemarks() {
+        showUserTaskByTaskId() {
+            let token = localStorage.getItem("token");
             axios
-                .get(`/tasks/${this.task.id}/remarks`)
+                .get(`/api/user-tasks/v1/task/${this.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
                 .then((response) => {
-                    this.remarks = response.data;
+                    if(typeof response.data.data !== "array") {
+                        this.userTasks = response.data.data;
+                    } else if(typeof response.data.data === "object") {
+                        for (let key in response.data.data) {
+                            this.userTasks.push(response.data.data[key]);
+                        }
+                    } else {
+                        this.userTasks = [];
+                    }
+                    console.log(this.userTasks);
+
                 })
                 .catch((error) => {
                     console.log(error);
                 });
         },
+        setTask() {
+            this.task.id = this.id;
+            this.task.title = this.title;
+        },
         addRemark() {
             axios
-                .post(`/tasks/${this.task.id}/remarks`, {
+                .post(`/tasks/${this.task}/remarks`, {
                     remarks: this.newRemark,
                 })
                 .then((response) => {
@@ -97,9 +127,8 @@ export default {
                 .then((response) => {
                     let statusObj = response.data.data;
                     for (let key in statusObj) {
-                        this.statuses.push(statusObj[key]);
+                        this.statusOptions.push(statusObj[key]);
                     }
-                    //console.log(typeof this.statuses);
                 })
                 .catch((error) => {
                     if (error.response.status === 401) {
@@ -134,14 +163,119 @@ export default {
                     }
                 )
                 .then((response) => {
-                    this.status = response.data.status.name;
+                    console.log(response);
                 })
                 .catch((error) => {
                     console.log(error);
                 });
-
-                
+        },
+        //turn object task [object object] to object
+        taskToArray() {
+            let taskObj = this.task;
+            for (let key in taskObj) {
+                this.userTasks.push(taskObj[key]);
+                console.log(taskObj[key]);
+            }
         },
     },
 };
 </script>
+
+<style scoped>
+.task {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #fff;
+    padding: 1rem;
+    padding-top: 0.4rem;
+    max-width: 800px;
+    width: 100%;
+    height: 120vh;
+    overflow-y: auto;
+    margin: 1rem auto;
+  }
+.user-task-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.user-task-header h2 {
+    margin: 0;
+    margin-bottom: 0.5rem;
+}
+.user-task-remarks{
+    padding: 1rem;
+    
+}
+.user-task-remarks li{
+    margin-bottom: 1rem;
+    margin: 1.5rem;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.user-task-remarks h4 {
+    margin: 0;
+    margin-bottom: 0.5rem;
+    
+}
+.user-task-card {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    margin-bottom: 1rem;
+}
+.user-task-card p {
+    margin: 0;
+    margin-bottom: 0.5rem;
+    color: #000;
+    text-align: left;
+}
+.user-task-card span {
+    /* position it on the right */
+    margin-left: auto;
+    color: #000;
+    text-align: right;
+}
+ul {
+    list-style: none;
+    padding: 1rem;
+    margin: 0.5rem;
+}
+li {
+    border-bottom: 1px solid #ddd;
+    padding: 0.5rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+
+}
+form {
+    display: grid;
+    gap: 0.4rem;
+}
+label {
+    display: block;
+}
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+textarea {
+    resize: none;
+}
+button {
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #000;
+    color: #fff;
+    cursor: pointer;
+}
+
+</style>

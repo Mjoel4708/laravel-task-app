@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-Route::get('{any}', function () {
+Route::middleware('web')->get('/{any}', function () {
     return view('app');
-})->where('any', '.*');
+})->where('any', '^((?!api).)*$');
+
 //Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

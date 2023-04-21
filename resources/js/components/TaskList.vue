@@ -5,18 +5,41 @@
             <li
                 v-for="task in tasks"
                 :key="task.id"
-                @click="viewTaskDetail(task.id)"
+                @click="viewUserTask(task)"
             >
                 <div class="task-card">
                     <p>Task title: {{ task.title }}</p>
                     <p>Description: {{ task.description }}</p>
-                    <p>Created at: {{ Date(task.created_at).toString().slice(0, 15) }}</p>
+                    <p>
+                        Created at:
+                        {{ Date(task.created_at).toString().slice(0, 15) }}
+                    </p>
+                    <div class="task-actions">
+                        <button
+                            class="action-btn view-btn"
+                            @click="viewUserTask(task)"
+                        >
+                            View
+                        </button>
+                        <button
+                            class="action-btn delete-btn"
+                            @click="deleteTask(task.id)"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </li>
         </ul>
         <li v-else>No tasks found</li>
         <li class="errors" v-if="error">{{ error }}</li>
     </div>
+    <CreateUserTaskModal
+                :taskId="id"
+                :showModal="showModal"
+                :task="task"
+                @closeModal="closeModal"
+            />
 </template>
 
 <script>
@@ -27,6 +50,8 @@ export default {
         return {
             tasks: [], // Update this with the actual list of tasks from the API
             error: null,
+            id: "",
+            showModal: false,
         };
     },
     mounted() {
@@ -41,10 +66,24 @@ export default {
         this.fetchTasks();
         console.log(typeof this.tasks);
     },
+
     methods: {
         viewTaskDetail(taskId) {
             // Redirect to TaskDetail page with taskId as route parameter
             this.$router.push(`/task/${taskId}`);
+        },
+        viewUserTask(task) {
+            console.log(task);
+            // Navigate to user-task page with the specified userTaskId as route param
+            this.$router.push({
+                name: "UserTasks",
+                params: {
+                    id: task.id,
+                    title: task.title,
+                    description: task.description,
+                    created_at: task.created_at,
+                },
+            });
         },
         fetchTasks() {
             // use axios to fetch the tasks from the API and update the tasks array
@@ -59,13 +98,12 @@ export default {
                     let taskObject = response.data.data;
                     if (taskObject.length > 0) {
                         this.tasks = taskObject;
-                    }else{
+                    } else {
                         this.tasks = [];
                     }
-                    
                 })
                 .catch((error) => {
-                    if(error.response.status === 401) {
+                    if (error.response.status === 401) {
                         this.error = "You are not authorized to view this page";
                         localStorage.removeItem("token");
                         this.isAuthenticated = false;
@@ -77,11 +115,43 @@ export default {
                 .finally(() => {
                     console.log("finally");
                 });
-            
-            //if response code is not 200 return error 
+
+            //if response code is not 200 return error
             if (fetchRequest.status !== 200) {
                 console.log("error");
             }
+        },
+        closeModal() {
+            this.showModal = false;
+        },
+        deleteTask(taskId) {
+            // Delete a task by taskId
+            let token = localStorage.getItem("token");
+            axios
+                .delete(`/api/tasks/v1/${taskId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                .then((response) => {
+                    this.fetchTasks();
+                    //reload the page
+                    this.$router.go();
+                    console.log(response);
+                })
+                .catch((error) => {
+                    if (error.response.status === 401) {
+                        this.error = "You are not authorized to view this page";
+                        localStorage.removeItem("token");
+                        this.isAuthenticated = false;
+                        this.$router.push("/login");
+                    } else {
+                        this.error = "Something went wrong";
+                    }
+                })
+                .finally(() => {
+                    console.log("finally");
+                });
         },
     },
 };
@@ -93,6 +163,7 @@ export default {
     margin: 1rem auto;
     padding: 2rem;
 }
+
 
 h2 {
     margin-top: 0;
@@ -150,6 +221,47 @@ li.errors {
     background-color: #fff;
     border: 1px solid #e71d36;
 }
+.task-actions{
+    /* delete and update buttons */
+    display: flex;
+    margin-top: 1rem; /* space between buttons and task card */
+    justify-content: space-between; /* space between buttons */
+    width: 100%;
+
+}
+.action-btn{
+    /* update button */
+    background-color: #2ec4b6;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+}
+.delete-btn{
+    /* delete button */
+    background-color: #e71d36;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-right: 1rem;
+    transition: all 0.3s ease-in-out;
+}
+.delete-btn:hover{
+    background-color: #fff;
+    color: #e71d36;
+    border: 1px solid #e71d36;
+}
+
+
+
 
 @media (min-width: 768px) {
     .task-list-container {

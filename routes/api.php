@@ -46,6 +46,7 @@ Route::group(['middleware' => 'auth.jwt', 'prefix' => 'user-tasks/v1'], function
     Route::get('/', [UserTaskController::class, 'index']);
     Route::post('/', [UserTaskController::class, 'store']);
     Route::get('/{id}', [UserTaskController::class, 'show']);
+    Route::get('/task/{id}', [UserTaskController::class, 'fetchUserTasksByTaskId']);
     Route::put('/{id}', [UserTaskController::class, 'update']);
     Route::delete('/{id}', [UserTaskController::class, 'destroy']);
 });
