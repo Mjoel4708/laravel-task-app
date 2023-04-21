@@ -1,76 +1,61 @@
-version: '3'
+version: "3.8"
 services:
-  app:
-    build: .
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-    links:
-      - db
-    networks:
-      - webnet
-    working_dir: /var/www/html/
-    restart: always
-  webserver:
-    image: nginx:alpine
-    container_name: webserver
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - webnet
-  db:
-    image: mysql:5.7
-    restart: always
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_DATABASE: '${DB_DATABASE}'
-      MYSQL_PASSWORD: '${DB_PASSWORD}'
-    ports:
-      - "3306:3306"
+  task_app:
+    container_name: task_app
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
     expose:
-      - "3306"
+      - 9000
     volumes:
-      - ./mysql:/var/lib/mysql
-    networks:
-      - webnet  
-
-  phpMyAdmin:
-    image: phpmyadmin/phpmyadmin
+      - .:/usr/src/app
+      - ./public:/usr/src/app/public
     depends_on:
-      - db
-    links:
-      - db
-    restart: always
-    
-    ports:
-      - "8090:80"
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 1m30s
-      timeout: 30s
-      retries: 5
-      start_period: 30s
+      - task_db
     networks:
-      - webnet
+      - app_network
 
-volumes:
-  mysql:
-    driver: local
-  html:
-    driver: local
+  task_nginx:
+    container_name: task_nginx
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    volumes:
+    - ./public:/usr/src/app/public
+    ports:
+      - 8000:80
+    depends_on:
+      - task_app
+    environment:
+      NGINX_FPM_HOST: task_app
+      NGINX_ROOT: /usr/src/app/public
+    networks:
+      - app_network
 
+  task_db:
+    container_name: task_db
+    image: mysql:8.0.20
+    restart: always
+    volumes:
+      - ./storage/db-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+    networks:
+      - app_network
+
+  task_redis:
+    container_name: task_redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - app_network
 
 networks:
-  webnet:
+  app_network:
     driver: bridge
