@@ -1,61 +1,49 @@
-version: "3.8"
+version: "3.7"
 services:
-  task_app:
-    container_name: task_app
+  app:
     build:
-      context: .
-      dockerfile: ./docker/php/Dockerfile
-    expose:
-      - 9000
+      args:
+        user: mike
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: travellist
+    container_name: travellist-app
+    restart: unless-stopped
+    working_dir: /var/www/
     volumes:
-      - .:/usr/src/app
-      - ./public:/usr/src/app/public
-    depends_on:
-      - task_db
+      - ./:/var/www
     networks:
-      - app_network
+      - travellist
 
-  task_nginx:
-    container_name: task_nginx
-    build:
-      context: .
-      dockerfile: ./docker/nginx/Dockerfile
+  db:
+    image: mysql:5.7
+    container_name: travellist-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
     volumes:
-    - ./public:/usr/src/app/public
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - travellist
+
+  nginx:
+    image: nginx:alpine
+    container_name: travellist-nginx
+    restart: unless-stopped
     ports:
       - 8000:80
-    depends_on:
-      - task_app
-    environment:
-      NGINX_FPM_HOST: task_app
-      NGINX_ROOT: /usr/src/app/public
-    networks:
-      - app_network
-
-  task_db:
-    container_name: task_db
-    image: mysql:8.0.20
-    restart: always
     volumes:
-      - ./storage/db-data:/var/lib/mysql
-    ports:
-      - 3306:3306
-    environment:
-      MYSQL_DATABASE: '${DB_DATABASE}'
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: '${DB_USERNAME}'
-      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
     networks:
-      - app_network
-
-  task_redis:
-    container_name: task_redis
-    image: redis:latest
-    ports:
-      - 6379:6379
-    networks:
-      - app_network
+      - travellist
 
 networks:
-  app_network:
+  travellist:
     driver: bridge
